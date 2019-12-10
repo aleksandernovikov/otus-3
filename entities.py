@@ -1,14 +1,23 @@
 from random import shuffle, sample
 
 
+class NoCardError(Exception):
+    pass
+
+
+class NoBarrelError(Exception):
+    pass
+
+
+class WinTheGame(Exception):
+    pass
+
+
 class Base:
     numbers = [i for i in range(1, 91)]
 
     def __init__(self):
         shuffle(self.numbers)
-
-    def pop_random_number(self):
-        return self.numbers.pop()
 
 
 class Bag(Base):
@@ -17,7 +26,10 @@ class Bag(Base):
     """
 
     def get_barrel(self):
-        return self.pop_random_number()
+        try:
+            return self.numbers.pop()
+        except IndexError as e:
+            raise NoBarrelError from e
 
 
 class Card:
@@ -25,6 +37,7 @@ class Card:
 
     def __init__(self, numbers: list):
         self.numbers = [i for i in range(3 * 9)]
+        self.found = []
         placeholders = [sample(self.numbers[sl], 5) for sl in self.line_slices]
         placeholders = sum(placeholders, [])
         for slot in self.numbers:
@@ -33,6 +46,15 @@ class Card:
     def preview(self):
         return [self.numbers[sl] for sl in self.line_slices]
 
+    def __contains__(self, item):
+        found = item in self.numbers
+        if found:
+            self.found.append(item)
+        if len(self.found) == 15:
+            raise WinTheGame
+
+        return found
+
 
 class CardStack(Base):
     """
@@ -40,7 +62,9 @@ class CardStack(Base):
     """
 
     def get_card(self):
-        nums = sample(self.numbers, 15)
-        self.numbers = list(set(self.numbers) - set(nums))
-        shuffle(self.numbers)
-        return Card(nums)
+        if self.numbers:
+            nums = sample(self.numbers, 15)
+            self.numbers = list(set(self.numbers) - set(nums))
+            shuffle(self.numbers)
+            return Card(nums)
+        raise NoCardError
