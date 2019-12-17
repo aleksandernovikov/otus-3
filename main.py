@@ -1,28 +1,75 @@
 import termtables as tt
 
-from entities import Bag, CardStack, WinTheGame
+from loto.base import Bag, CardStack
+from loto.exceptions import EndOfTheGame
+from loto.settings import answers
+
+
+def branching_answers(msg, yes, no):
+    answer_result = input(msg)
+    selected_action = yes if answers.get(answer_result, False) else no
+    selected_action()
+
+
+def player_check(card, number):
+    if number in card:
+        print('Отмечаем номер')
+        card.mark_number(number)
+    else:
+        raise EndOfTheGame('Такого номера у вас нет')
+
+
+def computer_check(card, number):
+    if number in card:
+        print('У компьютера есть такой номер')
+        card.mark_number(number)
+    else:
+        print('У компьютера нет такого номера')
+
 
 bag = Bag()
-
 stack = CardStack()
 
-card = stack.get_card()
-print('Ваша карта')
+player_card = stack.get_card()
+print('Вам досталась карта')
 print(tt.to_string(
-    data=card.preview(),
+    data=player_card.preview(),
     header=[],
     alignment='c',
     style=tt.styles.rounded_double
 ))
 
-step = 0
+computer_card = stack.get_card()
+branching_answers('Хотите посмотреть карту компьютера? ',
+                  lambda: print(
+                      tt.to_string(
+                          data=computer_card.preview(),
+                          header=[],
+                          alignment='c',
+                          style=tt.styles.rounded_double
+                      )),
+                  lambda: print('Продолжаем')
+                  )
+print('-' * 20)
 while True:
-    barrel = bag.get_barrel()
-    step += 1
-    print(f'\nШаг № {step}')
-    print(f'Из мешка вытянули бочонок с номером {barrel}')
+    current_number = bag.get_barrel()
+    player_has_number = current_number in player_card
+    computer_has_number = current_number in computer_card
+
+    print(f'\nВедущий вытянул боченок с номером {current_number}')
     try:
-        print('Есть на карте' if barrel in card else 'Нет на карте')
-    except WinTheGame:
-        print('Карта собрана, вы победили')
+        branching_answers('У вас есть такой боченок? ',
+                          yes=lambda: player_check(player_card, current_number),
+                          no=lambda: computer_check(computer_card, current_number))
+    except EndOfTheGame as e:
+        print('Вы проиграли')
         break
+    except Exception as e:
+        print(e)
+    else:
+        print(tt.to_string(
+            data=player_card.preview(),
+            header=[],
+            alignment='c',
+            style=tt.styles.rounded_double
+        ))
