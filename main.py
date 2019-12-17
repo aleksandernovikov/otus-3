@@ -58,11 +58,11 @@ while True:
 
     print(f'\nВедущий вытянул боченок с номером {current_number}')
     try:
-        branching_answers('У вас есть такой боченок? ',
+        branching_answers('У вас есть такой номер? ',
                           yes=lambda: player_check(player_card, current_number),
                           no=lambda: computer_check(computer_card, current_number))
     except EndOfTheGame as e:
-        print('Вы проиграли')
+        print(e)
         break
     except Exception as e:
         print(e)
