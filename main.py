@@ -16,7 +16,7 @@ def player_check(card, number):
         print('Отмечаем номер')
         card.mark_number(number)
     else:
-        raise EndOfTheGame('Такого номера у вас нет')
+        raise EndOfTheGame('Такого номера у вас нет, вы проиграли')
 
 
 def computer_check(card, number):
