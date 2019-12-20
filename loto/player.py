@@ -21,7 +21,6 @@ class Player:
         print(f'{self.name}={len(self.card.found)}')
 
         if len(self.card.found) == 15:
-            print(self.card.preview())
             raise EndOfTheGame(f'{self.name} победил')
 
 

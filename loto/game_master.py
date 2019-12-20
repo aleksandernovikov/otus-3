@@ -17,6 +17,7 @@ class Bag:
         """
         Перемешать содержимое мешка
         """
+        print('Встряхнул мешок')
         shuffle(self.numbers)
 
     def get_barrel(self):
@@ -52,6 +53,7 @@ class CardStack:
 class GameMaster:
     stack = CardStack()
     bag = Bag()
+    barrels_to_be_returned = []
     players = None
 
     def __init__(self, players_list):
@@ -62,7 +64,20 @@ class GameMaster:
         return self.stack.get_random_card()
 
     def get_barrel(self):
-        return self.bag.get_barrel()
+        barrel = self.bag.get_barrel()
+        return barrel
+
+    def check_barrel(self, barrel_number):
+        if barrel_number in self.barrels_to_be_returned:
+            self.bag.return_barrel(barrel_number)
+            self.barrels_to_be_returned.remove(barrel_number)
+            print(f'Ведущий вернул бочонок с номером {barrel_number} в мешок')
+            self.bag.shake_the_bag()
+
+    def start_game(self):
+        all_numbers = [player.card.numbers for player in self.players]
+        all_numbers = sum(all_numbers, [])
+        self.barrels_to_be_returned = [num for num in set(all_numbers) if all_numbers.count(num) > 1 and num > 0]
 
     def game_cycle(self):
         barrel_number = self.get_barrel()
@@ -70,7 +85,7 @@ class GameMaster:
 
         for player in self.players:
             player_answer = player.is_number_on_card(barrel_number)
-            master_answer = barrel_number in player.card
+            master_answer = barrel_number in player.card and barrel_number not in player.card.found
 
             answer_translation = 'есть такой номер' if player_answer else 'нет такого номера'
             print(f'{player.name} говорит что у него {answer_translation}')
@@ -78,6 +93,7 @@ class GameMaster:
             if player_answer == master_answer:
                 if player_answer is True:
                     player.mark_number_on_card(barrel_number)
+                    self.check_barrel(barrel_number)
                     break
             else:
                 raise EndOfTheGame(f'{player.name} ошибается и проигрывает в игре.')

@@ -10,7 +10,8 @@ class Card:
     def __init__(self) -> None:
         """
         Получилось довольно громоздко и не красиво
-        с соответствие с условиями генерации https://infostart.ru/public/144326/
+        в соответствие с условиями генерации https://infostart.ru/public/144326/
+        будет время, переделаю
         """
         self.found = []
         placeholders = []

@@ -15,8 +15,11 @@ for player in players:
     random_card = master.get_card()
     player.get_a_card(random_card)
 
+master.start_game()
+
 while True:
     try:
         master.game_cycle()
     except EndOfTheGame as e:
         print(e)
+        break
