@@ -1,4 +1,5 @@
-from random import sample, choice, shuffle
+from pprint import pprint
+from random import sample, choice, shuffle, randrange
 
 from log import loto_logger
 
@@ -9,6 +10,46 @@ class Card:
     """
     line_slices = (slice(0, 9), slice(9, 18), slice(18, 27))
 
+    @staticmethod
+    def _generate_card(w=9, h=3):
+        placeholders = [[0] * w for i in range(h)]
+
+        def get_column_sum(column_number):
+            return sum([placeholders[row_number][column_number] for row_number in range(h)])
+
+        def select_places(places_count=5):
+            places = sample(range(w), places_count)
+            return [1 if i in places else 0 for i in range(w)]
+
+        def check_columns():
+            for column_number in range(w):
+                if get_column_sum(column_number) not in range(1, 3):
+                    return False
+            return True
+
+        for row in range(h - 1):
+            placeholders[row] = select_places(5)
+
+        while True:
+            placeholders[2] = select_places()
+            if check_columns():
+                break
+
+        for column in range(w):
+            possible_values = list(range(column * 10, column * 10 + 10))
+
+            if column == 0:
+                possible_values.remove(0)
+            elif column == 8:
+                possible_values.append(90)
+
+            shuffle(possible_values)
+            for row in range(h):
+                if placeholders[row][column] == 1:
+                    placeholders[row][column] = possible_values.pop()
+
+        return placeholders
+
     def __init__(self) -> None:
         """
         Инициализация карты и расположение номеров в соответствие с условиями
@@ -18,41 +59,17 @@ class Card:
         будет время, переделаю
         """
         self.found = []
-        placeholders = []
-        for sl in self.line_slices:
-            for i in range(9):
-                r = range(i * 10, i * 10 + 9)
-                r = [num for num in r if num not in placeholders]
-                placeholders.append(choice(r))
-
-        for islice in self.line_slices[:-1]:
-            to_be_nulled = sample(placeholders[islice], 4)
-
-            for n in to_be_nulled:
-                indx = placeholders.index(n)
-                placeholders[indx] = 0
-
-        neutral = []
-        for it in range(9):
-            f = placeholders[self.line_slices[0]][it]
-            s = placeholders[self.line_slices[1]][it]
-            t = placeholders[self.line_slices[2]][it]
-            indx = placeholders.index(t)
-
-            if f > 0 and s > 0:
-                placeholders[indx] = 0
-            elif f > 0 or s > 0:
-                neutral.append(t)
-
-        empty_count = placeholders[self.line_slices[2]].count(0)
-
-        if empty_count < 4:
-            shuffle(neutral)
-            for i in range(4 - empty_count):
-                indx = placeholders.index(neutral[i])
-                placeholders[indx] = 0
+        placeholders = self._generate_card()
+        placeholders = sum(placeholders, [])
 
         loto_logger.debug(placeholders)
+
+        try:
+            assert len(placeholders) == 27
+            assert len([num for num in placeholders if num is not 0]) == 15
+        except AssertionError:
+            print([num for num in placeholders if num is not 0])
+
         self.numbers = placeholders
 
     def preview(self) -> list:

@@ -21,7 +21,7 @@ master.start_game()
 
 while True:
     try:
-        loto_logger.info('---')
+        loto_logger.debug('-' * 10)
         master.game_cycle()
     except EndOfTheGame as e:
         print(e)
