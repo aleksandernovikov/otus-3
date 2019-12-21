@@ -1,22 +1,45 @@
 import termtables as tt
 
+from log import loto_logger
 from loto.card import Card
 from loto.exceptions import EndOfTheGame
 
 
 class Player:
-    card = None
+    """
+    Базовый класс игрока, который нужно наследовать
+    """
+    card: Card = None
 
-    def __init__(self, name, *args, **kwargs):
+    def __init__(self, name: str, *args, **kwargs) -> None:
+        """
+        Инициализируем класс с заданным именем игрока
+        :param name: имя
+        :param args:
+        :param kwargs:
+        """
         self.name = name
 
-    def get_a_card(self, card: Card):
+    def get_a_card(self, card: Card) -> None:
+        """
+        Получение карточки игроком
+        :param card: карта выданная ведущим
+        """
         self.card = card
 
     def is_number_on_card(self, number: int):
+        """
+        Метод который нужно будет переопределить в наследниках
+        Определяет есть ли номер на карточке
+        :param number: номер
+        """
         pass
 
-    def mark_number_on_card(self, number):
+    def mark_number_on_card(self, number: int) -> None:
+        """
+        Номер на карте помечается как найденный
+        :param number: номер на бочонке
+        """
         self.card.mark_number(number)
         print(f'{self.name}={len(self.card.found)}')
 
@@ -25,12 +48,20 @@ class Player:
 
 
 class HumanPlayer(Player):
-    answers = {
+    """
+    Дочерний класс игрока
+    """
+    # возможные ответы игрока и результат
+    answers: dict = {
         'y': True, 'yes': True, 1: True, 'да': True,
         'n': False, 'no': False, 0: False, 'нет': False
     }
 
     def show_card(self) -> None:
+        """
+        Вывод карты в консоль
+        :return:
+        """
         print(f'Карта игрока {self.name}')
         print(tt.to_string(
             data=self.card.preview(),
@@ -40,11 +71,31 @@ class HumanPlayer(Player):
         ))
 
     def is_number_on_card(self, number: int) -> bool:
+        """
+        Проверка есть ли номер на карте
+        :param number: номер
+        :return: результат ответа True или False
+        """
         self.show_card()
         answer = input(f'У вас на карте есть номер {number}? ')
-        return self.answers.get(answer, False)
+        result = self.answers.get(answer, False)
+        loto_logger.debug('Игрок {} говорит что у него {} {}'.format(self.name, number, 'есть' if result else 'нет'))
+
+        return result
 
 
 class AIPlayer(Player):
+    """
+    Вариант компьютерного игрока
+    """
+
     def is_number_on_card(self, number):
-        return number in self.card.numbers
+        """
+        Проверка есть ли номер на карте
+        безхитростно говорит правду
+        :param number:
+        :return: результат ответа True или False
+        """
+        result = number in self.card.numbers
+        loto_logger.debug('Игрок {} говорит что у него {} {}'.format(self.name, number, 'есть' if result else 'нет'))
+        return result

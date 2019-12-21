@@ -1,5 +1,7 @@
 from random import sample, choice, shuffle
 
+from log import loto_logger
+
 
 class Card:
     """
@@ -9,6 +11,8 @@ class Card:
 
     def __init__(self) -> None:
         """
+        Инициализация карты и расположение номеров в соответствие с условиями
+
         Получилось довольно громоздко и не красиво
         в соответствие с условиями генерации https://infostart.ru/public/144326/
         будет время, переделаю
@@ -48,24 +52,40 @@ class Card:
                 indx = placeholders.index(neutral[i])
                 placeholders[indx] = 0
 
+        loto_logger.debug(placeholders)
         self.numbers = placeholders
 
-    def preview_line(self, num):
-        visual = {
-            0: '  '
-        }
-        visual.update({f: 'XX' for f in self.found})
-        return [visual.get(slot, slot) for slot in self.numbers[num]]
-
     def preview(self) -> list:
-        return [self.preview_line(sl) for sl in self.line_slices]
+        """
+        Предпросмотр карточки
+        Закрытые числа помечаются XX
+        """
 
-    def __contains__(self, item) -> bool:
+        def preview_line(num: slice) -> list:
+            visual = {
+                0: '  '
+            }
+            visual.update({f: 'XX' for f in self.found})
+            return [visual.get(slot, slot) for slot in self.numbers[num]]
+
+        return [preview_line(sl) for sl in self.line_slices]
+
+    def __contains__(self, item: int) -> bool:
+        """
+        Опеределение магического метода для класса Card
+        :param item: число с бочонка
+        :return: признак наличия числа на карточке True или False
+        """
         return item in self.numbers
 
-    def mark_number(self, number):
-        if number in self.numbers:
-            self.found.append(number)
+    def mark_number(self, number: int) -> None:
+        """
+        Число на карте помечается как найденное
+        :param number: номер числа
+        """
+        loto_logger.debug(f'Пробуем отметить номер {number}')
+        loto_logger.debug(f'Номера на карте {self.numbers}')
 
-    def used_numbers(self):
-        return self.numbers
+        if number in self.numbers:
+            loto_logger.debug('Номер найден')
+            self.found.append(number)
