@@ -9,12 +9,13 @@ class Bag:
     """
     Мешок с бочонками
     """
-    numbers = [i for i in range(1, 91)]
+    numbers = None
 
     def __init__(self):
         """
         Инициализация мешка
         """
+        self.numbers = [i for i in range(1, 91)]
         loto_logger.debug('Инициализация мешка')
         self.shake_the_bag()
 

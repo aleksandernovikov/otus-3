@@ -1,4 +1,7 @@
+import pytest
+
 from loto.card import Card
+from loto.exceptions import NoBarrelError, EndOfTheGame
 from loto.game_master import Bag, CardStack, GameMaster
 from loto.player import AIPlayer, Player
 
@@ -8,46 +11,49 @@ class TestBag:
     Тестирование мешка с бочонками
     """
 
-    def setup(self):
-        """
-        Создание мешка
-        :return:
-        """
-        self.bag = Bag()
-
     def test_shake_the_bag(self):
         """
         Тестирование метода перемешивания мешка
         """
-        bag_numbers = self.bag.numbers[:]
-        self.bag.shake_the_bag()
-        new_numbers = self.bag.numbers[:]
+        bag = Bag()
+        bag_numbers = bag.numbers[:]
+        bag.shake_the_bag()
+        new_numbers = bag.numbers[:]
         assert bag_numbers != new_numbers
 
     def test_barrels_count(self):
         """
         Тестирование количества бочонков в мешке
         """
-        assert len(self.bag.numbers) == 90
-        init_len = len(self.bag.numbers)
-        self.bag.get_barrel()
-        assert len(self.bag.numbers) == init_len - 1
+        bag = Bag()
+        assert len(bag.numbers) == 90
+        init_len = len(bag.numbers)
+        bag.get_barrel()
+        assert len(bag.numbers) == init_len - 1
 
     def test_get_barrel(self):
         """
         Тестирование метода когда ведущий достает бочонок
         """
-        number = self.bag.get_barrel()
-        assert number not in self.bag.numbers
+        bag = Bag()
+        number = bag.get_barrel()
+        assert number not in bag.numbers
+
+    def test_get_more_barrels(self):
+        bag = Bag()
+        with pytest.raises(NoBarrelError):
+            for i in range(100):
+                bag.get_barrel()
 
     def test_return_barrel(self):
         """
         Тестирование метода когда ведущий возвращает бочонок в мешок
         """
-        number = self.bag.get_barrel()
-        assert number not in self.bag.numbers
-        self.bag.return_barrel(number)
-        assert number in self.bag.numbers
+        bag = Bag()
+        number = bag.get_barrel()
+        assert number not in bag.numbers
+        bag.return_barrel(number)
+        assert number in bag.numbers
 
 
 class TestCardStack:
@@ -73,14 +79,27 @@ class TestPlayer:
 
 
 class TestGameMaster:
+    master = None
+
     def setup(self):
         players = [
             AIPlayer(name='Компьютер 1'),
             AIPlayer(name='Компьютер 2')
         ]
-        master = GameMaster(players_list=players)
+        self.master = GameMaster(players_list=players)
 
-        for player in players:
-            player.get_a_card(master.get_card())
+        for player in self.master.players:
+            player.get_a_card(self.master.get_card())
 
-        master.start_game()
+        self.master.start_game()
+
+    def test_game_cycle_player_answer(self):
+        barrel_number = self.master.get_barrel()
+        wrong_player_answer = not self.master.players[0].is_number_on_card(barrel_number)
+        master_answer = barrel_number in self.master.players[0].card
+        assert wrong_player_answer != master_answer
+
+    def test_more_barrels_in_bag(self):
+        with pytest.raises(NoBarrelError):
+            for i in range(100):
+                self.master.get_barrel()
